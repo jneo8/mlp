@@ -19,7 +19,11 @@ class Test():
         # show shape
         logger.info('x.shape {}'.format(self.x.shape))
         logger.info('y.shape {}'.format(self.y.shape))
-
+        
+        # split train&test data set
+        self.x_train, slef.x_test = self.x[:60000], self.x[60000:] 
+        self.y_train, slef.y_test = self.y[:60000], self.y[60000:] 
+        
     @property
     def p1(self):
         some_digit = self.x[36000]
