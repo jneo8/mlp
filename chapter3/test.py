@@ -1,7 +1,10 @@
 """Test."""
 import subprocess
+
 import matplotlib
 import matplotlib.pyplot as plt
+import numpy as np
+
 from read import read
 from confs import logconf
 logger = logconf.Logger(__file__).logger
@@ -21,9 +24,11 @@ class Test():
         logger.info('y.shape {}'.format(self.y.shape))
         
         # split train&test data set
-        self.x_train, slef.x_test = self.x[:60000], self.x[60000:] 
-        self.y_train, slef.y_test = self.y[:60000], self.y[60000:] 
-        
+        self.x_train, self.x_test = self.x[:60000], self.x[60000:] 
+        self.y_train, self.y_test = self.y[:60000], self.y[60000:] 
+        shuffle_index = np.random.permutation(60000)
+        self.x_train, y_train = self.x_train[shuffle_index], self.y_train[shuffle_index] 
+
     @property
     def p1(self):
         some_digit = self.x[36000]
