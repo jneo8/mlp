@@ -32,21 +32,24 @@ class Test():
 
     @property
     def p1(self):
-        some_digit = self.x[36000]
-        some_digit_image = some_digit.reshape(28, 28)
+        self.some_digit = self.x[37000]
+        some_digit_image = self.some_digit.reshape(28, 28)
         plt.imshow(some_digit_image, cmap=matplotlib.cm.binary, interpolation="nearest")
         plt.axis('off')
         plt.savefig('img/c2p1')
         subprocess.call(['catimg', '-f', 'img/c2p1.png'])
-        logger.info('y[36000] : {}'.format(self.y[36000]))
+        logger.info('y[36000] : {}'.format(self.y[37000]))
 
     @property
-    def train_binary_classifier(self):
+    def sgd(self):
         y_train_5 = (self.y_train == 5)
-        y_test_5 = (y_test == 5)
+        y_test_5 = (self.y_test == 5)
         sgd_clf = SGDClassifier(random_state=42)
-        sgd_clf.fit(self.x_train, y.train_5)
+        sgd_clf.fit(self.x_train, y_train_5)
+        logger.info(sgd_clf.predict([self.some_digit]))
+        
 
 if __name__ == '__main__':
     t = Test()
     t.p1
+    t.sgd
