@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.linear_model import SGDClassifier
 from sklearn.model_selection import cross_val_score
+from sklearn.base import BaseEstimator
 
 from read import read
 from confs import logconf
@@ -75,7 +76,33 @@ class Test():
             scoring="accuracy",
         )
 
-        print(x)
+        logger.info('cross_val_score : {}'.format(x))
+
+        never_5_clf = Never5Classifier()
+        x = cross_val_score(
+            never_5_clf,
+            self.x_train,
+            y_train_5,
+            cv=3,
+            scoring="accuracy",
+        )
+        logger.info('cross_val_score use never_5_clf : {}'.format(x))
+
+
+class Never5Classifier(BaseEstimator):
+    """Never5Classifier."""
+
+    """
+    ""  Return list than pretend the model which  always guess 5.
+    """
+
+    def fit(self, x, y=None):
+        """Fit data."""
+        pass
+
+    def predict(self, x):
+        """Predict."""
+        return np.zeros((len(x), 1), dtype=bool)
 
 
 if __name__ == '__main__':
