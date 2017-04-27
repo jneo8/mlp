@@ -5,6 +5,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.linear_model import SGDClassifier
+from sklearn.model_selection import cross_val_score
 
 from read import read
 from confs import logconf
@@ -17,37 +18,65 @@ class Test():
     def __init__(self):
         """Init."""
         mnist = read()
-    
+
         self.x, self.y = mnist['data'], mnist['target']
-    
+
         # show shape
         logger.info('x.shape {}'.format(self.x.shape))
         logger.info('y.shape {}'.format(self.y.shape))
-        
+
         # split train&test data set
-        self.x_train, self.x_test = self.x[:60000], self.x[60000:] 
-        self.y_train, self.y_test = self.y[:60000], self.y[60000:] 
+        self.x_train, self.x_test = self.x[:60000], self.x[60000:]
+        self.y_train, self.y_test = self.y[:60000], self.y[60000:]
         shuffle_index = np.random.permutation(60000)
-        self.x_train, y_train = self.x_train[shuffle_index], self.y_train[shuffle_index] 
+        self.x_train = self.x_train[shuffle_index]
+        self.y_train = self.y_train[shuffle_index]
 
     @property
     def p1(self):
-        self.some_digit = self.x[37000]
+        """p1."""
+        """
+        "" Only show one png.
+        """
+        num = 37000
+        self.some_digit = self.x[num]
+        # reshape data
         some_digit_image = self.some_digit.reshape(28, 28)
-        plt.imshow(some_digit_image, cmap=matplotlib.cm.binary, interpolation="nearest")
+        # put digit_image data into plt, and use catimg show in termial.
+        plt.imshow(
+            some_digit_image,
+            cmap=matplotlib.cm.binary,
+            interpolation="nearest",
+        )
         plt.axis('off')
         plt.savefig('img/c2p1')
         subprocess.call(['catimg', '-f', 'img/c2p1.png'])
-        logger.info('y[36000] : {}'.format(self.y[37000]))
+        logger.info('Label of y[{num}] : {y}'.format(num=num, y=self.y[num]))
 
     @property
     def sgd(self):
-        y_train_5 = (self.y_train == 5)
+        """SGD model."""
+        # set train num, so that model can guess that is the digit is that num?
         y_test_5 = (self.y_test == 5)
+        y_train_5 = (self.y_train == 5)
         sgd_clf = SGDClassifier(random_state=42)
         sgd_clf.fit(self.x_train, y_train_5)
-        logger.info(sgd_clf.predict([self.some_digit]))
-        
+        logger.info('SDG model guess : {}'.format(
+            sgd_clf.predict([self.some_digit]))
+        )
+
+        # Measuring Accuracy using cross-validation
+        # 測量精度
+        x = cross_val_score(
+            sgd_clf,
+            self.x_train,
+            y_train_5,
+            cv=3,
+            scoring="accuracy",
+        )
+
+        print(x)
+
 
 if __name__ == '__main__':
     t = Test()
