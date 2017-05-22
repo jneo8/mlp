@@ -101,7 +101,7 @@ class Test():
     @property
     def confusion_matrix(self):
         """Confusion martrix."""
-        commit = """ 
+        commit = """
         return list [[A, B], [C, D]]
         which mean:
 

@@ -1,8 +1,8 @@
 import subprocess 
 import os
-from confs import logconf
-from scipy.io import loadmat
 
+from scipy.io import loadmat
+from confs import logconf
 logger = logconf.Logger(__file__).logger
 
 
