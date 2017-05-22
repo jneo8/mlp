@@ -120,6 +120,17 @@ class Test():
             commit=commit, x=x
         ))
 
+        ### precision = TP / (TP + FP)
+
+        presicion = x[0][0] / x[0].sum()
+        logger.info('precision {}'.format(presicion))
+        
+
+        ### recall/sensitivity/true positive rate = TP / (TP + FN)
+        recall = x[0][0] / (x[0][0] + x[1][0])
+        logger.info('recall {}'.format(recall))
+
+
 
 class Never5Classifier(BaseEstimator):
     """Never5Classifier."""
