@@ -8,8 +8,13 @@ from sklearn.linear_model import SGDClassifier
 from sklearn.model_selection import cross_val_score
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import cross_val_predict
-from sklearn.metrics import confusion_matrix
 
+from sklearn.metrics import (
+    confusion_matrix,
+    precision_score,
+    recall_score,
+    f1_score,
+)
 from read import read
 from confs import logconf
 logger = logconf.Logger(__file__).logger
@@ -43,7 +48,7 @@ class Test():
         """
         "" Only show one png.
         """
-        num = 37000
+        num = 50000
         self.some_digit = self.x[num]
         # reshape data
         some_digit_image = self.some_digit.reshape(28, 28)
@@ -63,6 +68,7 @@ class Test():
         """SGD model."""
         # set train num, so that model can guess that is the digit is that num?
 
+        # sklearn.linear_model.SGDClassifier
         self.sgd_clf = SGDClassifier(random_state=42)
         self.sgd_clf.fit(self.x_train, self.y_train_5)
         logger.info('SDG model guess : {}'.format(
@@ -120,16 +126,26 @@ class Test():
             commit=commit, x=x
         ))
 
-        ### precision = TP / (TP + FP)
-
-        presicion = x[0][0] / x[0].sum()
+        ###
+        # precision = TP / (TP + FP)
+        ###
+        # sklearn.metrics.precision_score
+        presicion = precision_score(self.y_train_5, y_train_pred)
         logger.info('precision {}'.format(presicion))
-        
 
-        ### recall/sensitivity/true positive rate = TP / (TP + FN)
-        recall = x[0][0] / (x[0][0] + x[1][0])
+        ###
+        # recall/sensitivity/true positive rate = TP / (TP + FN)
+        ###
+        # sklearn.metrics.recall_score
+        recall = recall_score(self.y_train_5, y_train_pred)
         logger.info('recall {}'.format(recall))
 
+        ###
+        # F1-Score = TP / (TP + ((FN + FP) / 2))
+        ###
+        # sklearn.metrics.f1_score
+        f1_score_ = f1_score(self.y_train_5, y_train_pred)
+        logger.info('f1 score {}'.format(f1_score_))
 
 
 class Never5Classifier(BaseEstimator):
