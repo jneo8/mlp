@@ -177,42 +177,11 @@ class Test():
             )
         )
 
-        ###
-        # Get classifer of 90% precision.
-        ###
-
-        logger.info('Get classifer of 90% precision')
-        y_scores = cross_val_predict(
-            self.sgd_clf,
-            self.x_train,
-            self.y_train_5,
-            cv=3,
-            method="decision_function",
-        )
-
-        thresholds_90_pred = self.plot_precsion_recall_vs_threshold(
-            y_scores=y_scores
-        )
-        y_train_pred_90 = (y_scores > thresholds_90_pred)
-        logger.debug(
-            'precision score of threshold =={threshold} {precision}'
-            .format(
-                threshold=thresholds_90_pred,
-                precision=precision_score(self.y_train_5, y_train_pred_90),
-            )
-        )
-
-        logger.debug(
-            'recall score of threshold == {threshold} {recall}'
-            .format(
-                threshold=thresholds_90_pred,
-                recall=recall_score(self.y_train_5, y_train_pred_90),
-            )
-        )
-
-    def plot_precsion_recall_vs_threshold(self, y_scores):
+    @property
+    def plot_precsion_recall_vs_threshold_curve(self, y_scores):
         """Draw curve of presicion, recall and threshold."""
         ###
+        # Get classifer of 90% precision.
         # sklearn.metrics.precision_recall_curve
         ###
         precisions, recalls, thresholds = precision_recall_curve(
@@ -236,7 +205,36 @@ class Test():
                 idx_90_pred = idx
                 break
 
-        return thresholds[idx_90_pred]
+        logger.info('Get classifer of 90% precision')
+        y_scores = cross_val_predict(
+            self.sgd_clf,
+            self.x_train,
+            self.y_train_5,
+            cv=3,
+            method="decision_function",
+        )
+
+        thresholds_90_pred = thresholds[idx_90_pred]
+
+        y_train_pred_90 = (y_scores > thresholds_90_pred)
+        logger.debug(
+            'precision score of threshold =={threshold} {precision}'
+            .format(
+                threshold=thresholds_90_pred,
+                precision=precision_score(self.y_train_5, y_train_pred_90),
+            )
+        )
+
+        logger.debug(
+            'recall score of threshold == {threshold} {recall}'
+            .format(
+                threshold=thresholds_90_pred,
+                recall=recall_score(self.y_train_5, y_train_pred_90),
+            )
+        )
+
+    def plot_roc_curve(self, fpr, tpr, label=None):
+        """Plot Roc curve."""
 
 
 class Never5Classifier(BaseEstimator):
@@ -261,3 +259,4 @@ if __name__ == '__main__':
     t.sgd
     t.never5
     t.confusion_matrix
+    t.plot_precsion_recall_vs_threshold_curve
