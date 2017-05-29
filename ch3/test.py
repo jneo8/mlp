@@ -14,6 +14,7 @@ from sklearn.metrics import (
     precision_score,
     recall_score,
     f1_score,
+    precision_recall_curve,
 )
 from read import read
 from confs import logconf
@@ -41,6 +42,8 @@ class Test():
         self.y_train = self.y_train[shuffle_index]
         self.y_test_5 = (self.y_test == 5)
         self.y_train_5 = (self.y_train == 5)
+        self.num = 40000  # The target test item between 1 ~ 60000.
+        self.some_digit = self.x[self.num]
 
     @property
     def p1(self):
@@ -48,8 +51,7 @@ class Test():
         """
         "" Only show one png.
         """
-        num = 50000
-        self.some_digit = self.x[num]
+
         # reshape data
         some_digit_image = self.some_digit.reshape(28, 28)
         # put digit_image data into plt, and use catimg show in termial.
@@ -59,9 +61,13 @@ class Test():
             interpolation="nearest",
         )
         plt.axis('off')
-        plt.savefig('img/c2p1')
-        subprocess.call(['catimg', '-f', 'img/c2p1.png'])
-        logger.info('Label of y[{num}] : {y}'.format(num=num, y=self.y[num]))
+        plt.savefig('img/c3p1')
+        plt.clf()
+        subprocess.call(['catimg', '-f', 'img/c3p1.png'])
+        logger.info('Label of y[{num}] : {y}'.format(
+            num=self.num,
+            y=self.y[self.num])
+        )
 
     @property
     def sgd(self):
@@ -71,7 +77,7 @@ class Test():
         # sklearn.linear_model.SGDClassifier
         self.sgd_clf = SGDClassifier(random_state=42)
         self.sgd_clf.fit(self.x_train, self.y_train_5)
-        logger.info('SDG model guess : {}'.format(
+        logger.info('SDG model 5 guess : {}'.format(
             self.sgd_clf.predict([self.some_digit]))
         )
 
@@ -149,8 +155,45 @@ class Test():
         f1_score_ = f1_score(self.y_train_5, y_train_pred)
         logger.info('f1 score {}'.format(f1_score_))
 
+        ###
+        # Get some_digit's score, and reset threshold.
+        ###
+        y_score = self.sgd_clf.decision_function([self.some_digit])
+        logger.info(
+            "some_digit {num} score {score}".format(
+                num=self.num,
+                score=y_score
+            )
+        )
+        threshold = 20000
+        y_some_digit_pred = (y_score > threshold)
+        logger.info('y_some_digit_pred : {}'.format(y_some_digit_pred))
 
+    def plot_precsion_recall_vs_threshold(self):
+        """Draw curve of presicion, recall and threshold."""
+        ###
+        # sklearn.metrics.precision_recall_curve
+        ###
+        y_scores = cross_val_predict(
+            self.sgd_clf,
+            self.x_train,
+            self.y_train_5,
+            cv=3,
+            method="decision_function",
+        )
+        precisions, recalls, thresholds = precision_recall_curve(
+            self.y_train_5,
+            y_scores
+        )
+        plt.plot(thresholds, precisions[:-1], "b--", label='Precision')
+        plt.plot(thresholds, recalls[:-1], "g-", label='Recall')
+        plt.xlabel('Threshold')
+        plt.legend(loc="upper left")
+        plt.ylim([0, 1])
 
+        plt.savefig('img/c3p2')
+        plt.clf()
+        subprocess.call(['catimg', '-f', 'img/c3p2.png'])
 
 
 class Never5Classifier(BaseEstimator):
@@ -175,3 +218,4 @@ if __name__ == '__main__':
     t.sgd
     t.never5
     t.confusion_matrix
+    t.plot_precsion_recall_vs_threshold()
