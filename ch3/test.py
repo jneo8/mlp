@@ -51,7 +51,7 @@ class Test():
         """
         "" Only show one png.
         """
-
+        logger.info('Use SGDClassifier to guess img')
         # reshape data
         some_digit_image = self.some_digit.reshape(28, 28)
         # put digit_image data into plt, and use catimg show in termial.
@@ -64,7 +64,7 @@ class Test():
         plt.savefig('img/c3p1')
         plt.clf()
         subprocess.call(['catimg', '-f', 'img/c3p1.png'])
-        logger.info('Label of y[{num}] : {y}'.format(
+        logger.debug('Label of y[{num}] : {y}'.format(
             num=self.num,
             y=self.y[self.num])
         )
@@ -77,7 +77,7 @@ class Test():
         # sklearn.linear_model.SGDClassifier
         self.sgd_clf = SGDClassifier(random_state=42)
         self.sgd_clf.fit(self.x_train, self.y_train_5)
-        logger.info('SDG model 5 guess : {}'.format(
+        logger.debug('SDG model 5 guess : {}'.format(
             self.sgd_clf.predict([self.some_digit]))
         )
 
@@ -91,7 +91,7 @@ class Test():
             scoring="accuracy",
         )
 
-        logger.info('cross_val_score : {}'.format(x))
+        logger.debug('cross_val_score : {}'.format(x))
 
     @property
     def never5(self):
@@ -108,11 +108,15 @@ class Test():
             cv=3,
             scoring="accuracy",
         )
-        logger.info('{commit}\ncross_val_score use never_5_clf : {x}\n'.format(commit=commit, x=x))
+        logger.debug(
+            '{commit}\ncross_val_score use never_5_clf : {x}\n'
+            .format(commit=commit, x=x)
+        )
 
     @property
     def confusion_matrix(self):
         """Confusion martrix."""
+        logger.info('confusion_matrix')
         commit = """
         return list [[A, B], [C, D]]
         which mean:
@@ -128,7 +132,7 @@ class Test():
             cv=3,
         )
         x = confusion_matrix(self.y_train_5, y_train_pred)
-        logger.info('{commit}\nconfusion_matrix : \n{x}\n'.format(
+        logger.debug('{commit}\nconfusion_matrix : \n{x}\n'.format(
             commit=commit, x=x
         ))
 
@@ -138,7 +142,7 @@ class Test():
         ###
         # sklearn.metrics.precision_score
         presicion = precision_score(self.y_train_5, y_train_pred)
-        logger.info('precision {}'.format(presicion))
+        logger.debug('precision {}'.format(presicion))
 
         ###
         # recall/sensitivity/true positive rate = TP / (TP + FN)
@@ -146,34 +150,38 @@ class Test():
         ###
         # sklearn.metrics.recall_score
         recall = recall_score(self.y_train_5, y_train_pred)
-        logger.info('recall {}'.format(recall))
+        logger.debug('recall {}'.format(recall))
 
         ###
         # F1-Score = TP / (TP + ((FN + FP) / 2))
         ###
         # sklearn.metrics.f1_score
         f1_score_ = f1_score(self.y_train_5, y_train_pred)
-        logger.info('f1 score {}'.format(f1_score_))
+        logger.debug('f1 score {}'.format(f1_score_))
 
         ###
         # Get some_digit's score, and reset threshold.
         ###
         y_score = self.sgd_clf.decision_function([self.some_digit])
-        logger.info(
-            "some_digit {num} score {score}".format(
-                num=self.num,
-                score=y_score
-            )
-        )
         threshold = 20000
         y_some_digit_pred = (y_score > threshold)
-        logger.info('y_some_digit_pred : {}'.format(y_some_digit_pred))
+        logger.debug(
+            '\nGet some_digit\'s score, and reset threshold\n'
+            "some_digit {num} score {score}\n"
+            'y_some_digit_pred, threshold = {threshold}: {y_some_digit_pred}'
+            .format(
+                num=self.num,
+                score=y_score,
+                threshold=threshold,
+                y_some_digit_pred=y_some_digit_pred,
+            )
+        )
 
-    def plot_precsion_recall_vs_threshold(self):
-        """Draw curve of presicion, recall and threshold."""
         ###
-        # sklearn.metrics.precision_recall_curve
+        # Get classifer of 90% precision.
         ###
+
+        logger.info('Get classifer of 90% precision')
         y_scores = cross_val_predict(
             self.sgd_clf,
             self.x_train,
@@ -181,6 +189,32 @@ class Test():
             cv=3,
             method="decision_function",
         )
+
+        thresholds_90_pred = self.plot_precsion_recall_vs_threshold(
+            y_scores=y_scores
+        )
+        y_train_pred_90 = (y_scores > thresholds_90_pred)
+        logger.debug(
+            'precision score of threshold =={threshold} {precision}'
+            .format(
+                threshold=thresholds_90_pred,
+                precision=precision_score(self.y_train_5, y_train_pred_90),
+            )
+        )
+
+        logger.debug(
+            'recall score of threshold == {threshold} {recall}'
+            .format(
+                threshold=thresholds_90_pred,
+                recall=recall_score(self.y_train_5, y_train_pred_90),
+            )
+        )
+
+    def plot_precsion_recall_vs_threshold(self, y_scores):
+        """Draw curve of presicion, recall and threshold."""
+        ###
+        # sklearn.metrics.precision_recall_curve
+        ###
         precisions, recalls, thresholds = precision_recall_curve(
             self.y_train_5,
             y_scores
@@ -193,7 +227,16 @@ class Test():
 
         plt.savefig('img/c3p2')
         plt.clf()
+        logger.debug('Curve of presicion, recall and threshold')
         subprocess.call(['catimg', '-f', 'img/c3p2.png'])
+
+        idx_90_pred = 0
+        for idx, p in enumerate(precisions):
+            if p > 0.9:
+                idx_90_pred = idx
+                break
+
+        return thresholds[idx_90_pred]
 
 
 class Never5Classifier(BaseEstimator):
@@ -218,4 +261,3 @@ if __name__ == '__main__':
     t.sgd
     t.never5
     t.confusion_matrix
-    t.plot_precsion_recall_vs_threshold()
