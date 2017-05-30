@@ -5,12 +5,14 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.linear_model import SGDClassifier
-from sklearn.model_selection import cross_val_score
 from sklearn.base import BaseEstimator
-from sklearn.model_selection import cross_val_predict
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.multiclass import OneVsOneClassifier
-
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import (
+    cross_val_score,
+    cross_val_predict,
+)
 from sklearn.metrics import (
     confusion_matrix,
     precision_score,
@@ -367,16 +369,59 @@ class BinaryClassifier():
     def one_vs_one_classifier(self):
         """User OneVsOneClassifier."""
         """
-        sklearn.multiclass.OneVsOneClassifier
+        # One-versus-one (OvO) strategy
+            sklearn.multiclass.OneVsOneClassifier
+
+        # Increase accuracy above
+            sklearn.preprocessing.StandardScaler
         """
         logger.info('User OneVsOneClassifier')
         ovo_clf = OneVsOneClassifier(SGDClassifier(random_state=42))
         ovo_clf.fit(self.x_train, self.y_train)
         logger.debug(
-            'Predict some_digiit {}'
+            'ovo SGDClassifier Predict some_digiit {}'
             .format(ovo_clf.predict([self.some_digit]))
         )
         logger.debug('len ovo_clf : {}'.format(len(ovo_clf.estimators_)))
+
+        """
+        Scikit-learn did not have to run OvO or OvA because Random Forest
+        classifier can directly classify instances into multiple classes.
+        """
+        forest_clf = RandomForestClassifier(random_state=42)
+        forest_clf.fit(self.x_train, self.y_train)
+        logger.debug(
+            'RandForestClassifier  Predict some_digiit {}'
+            .format(forest_clf.predict([self.some_digit]))
+        )
+        logger.debug(
+            'RandForestClassifier  Predict proba {}'
+            .format(forest_clf.predict_proba([self.some_digit]))
+        )
+
+        # evaluate
+
+        ovo_scores = cross_val_score(
+            ovo_clf,
+            self.x_train,
+            self.y_train,
+            cv=3,
+            scoring='accuracy',
+        )
+        logger.debug('ovo_scores {}'.format(ovo_scores))
+
+        # Increase accuracy above.
+        scaler = StandardScaler()
+        x_train_scaled = scaler.fit_transform(self.x_train.astype(np.float64))
+        ovo_scaled_scores = cross_val_score(
+            ovo_clf,
+            x_train_scaled,
+            self.y_train,
+            cv=3,
+            scoring="accuracy",
+        )
+
+        logger.debug('ovo_scaled_scores {}'.format(ovo_scaled_scores))
 
 
 class Never5Classifier(BaseEstimator):
