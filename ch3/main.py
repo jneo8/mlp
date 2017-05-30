@@ -15,6 +15,8 @@ from sklearn.metrics import (
     recall_score,
     f1_score,
     precision_recall_curve,
+    roc_curve,
+    roc_auc_score,
 )
 from read import read
 from confs import logconf
@@ -178,26 +180,37 @@ class Test():
         )
 
     @property
-    def plot_precsion_recall_vs_threshold_curve(self, y_scores):
+    def plot_precsion_recall_vs_threshold_curve(self):
         """Draw curve of presicion, recall and threshold."""
         ###
         # Get classifer of 90% precision.
         # sklearn.metrics.precision_recall_curve
         ###
+
+        self.y_scores = cross_val_predict(
+            self.sgd_clf,
+            self.x_train,
+            self.y_train_5,
+            cv=3,
+            method="decision_function",
+        )
+
         precisions, recalls, thresholds = precision_recall_curve(
             self.y_train_5,
-            y_scores
+            self.y_scores,
         )
+
+        # plt
         plt.plot(thresholds, precisions[:-1], "b--", label='Precision')
         plt.plot(thresholds, recalls[:-1], "g-", label='Recall')
         plt.xlabel('Threshold')
         plt.legend(loc="upper left")
         plt.ylim([0, 1])
-
-        plt.savefig('img/c3p2')
+        plt.savefig('img/precision_recall_curve')
         plt.clf()
+
         logger.debug('Curve of presicion, recall and threshold')
-        subprocess.call(['catimg', '-f', 'img/c3p2.png'])
+        subprocess.call(['catimg', '-f', 'img/precision_recall_curve.png'])
 
         idx_90_pred = 0
         for idx, p in enumerate(precisions):
@@ -206,17 +219,10 @@ class Test():
                 break
 
         logger.info('Get classifer of 90% precision')
-        y_scores = cross_val_predict(
-            self.sgd_clf,
-            self.x_train,
-            self.y_train_5,
-            cv=3,
-            method="decision_function",
-        )
 
         thresholds_90_pred = thresholds[idx_90_pred]
 
-        y_train_pred_90 = (y_scores > thresholds_90_pred)
+        y_train_pred_90 = (self.y_scores > thresholds_90_pred)
         logger.debug(
             'precision score of threshold =={threshold} {precision}'
             .format(
@@ -233,8 +239,34 @@ class Test():
             )
         )
 
-    def plot_roc_curve(self, fpr, tpr, label=None):
+    @property
+    def plot_roc_curve(self):
         """Plot Roc curve."""
+        ###
+        #  plot roc curve.
+        #  sklearn.metrics.roc_curve
+        #  compute ROC AUC
+        #  sklearn.metrics.roc_auc_score
+        #  Roc curve
+        #  https://zh.wikipedia.org/wiki/ROC曲线
+        ###
+
+        logger.info('Plot ROC Curve')
+        fpr, tpr, thresholds = roc_curve(self.y_train_5, self.y_scores)
+
+        plt.plot(fpr, tpr, linewidth=2, label=None)
+        plt.plot([0, 1], [0, 1], 'k--')
+        plt.axis([0, 1, 0, 1])
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.savefig('img/roc')
+        plt.clf()
+        subprocess.call(['catimg', '-f', 'img/roc.png'])
+        roc_auc = roc_auc_score(self.y_train_5, self.y_scores)
+        logger.debug(
+            'ROC AUC Score : {score}'
+            .format(score=roc_auc)
+        )
 
 
 class Never5Classifier(BaseEstimator):
@@ -260,3 +292,4 @@ if __name__ == '__main__':
     t.never5
     t.confusion_matrix
     t.plot_precsion_recall_vs_threshold_curve
+    t.plot_roc_curve
