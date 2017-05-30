@@ -8,6 +8,7 @@ from sklearn.linear_model import SGDClassifier
 from sklearn.model_selection import cross_val_score
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import cross_val_predict
+from sklearn.ensemble import RandomForestClassifier
 
 from sklearn.metrics import (
     confusion_matrix,
@@ -48,7 +49,7 @@ class Test():
         self.some_digit = self.x[self.num]
 
     @property
-    def p1(self):
+    def guess(self):
         """p1."""
         """
         "" Only show one png.
@@ -63,9 +64,9 @@ class Test():
             interpolation="nearest",
         )
         plt.axis('off')
-        plt.savefig('img/c3p1')
+        plt.savefig('img/guess')
         plt.clf()
-        subprocess.call(['catimg', '-f', 'img/c3p1.png'])
+        subprocess.call(['catimg', '-f', 'img/guess.png'])
         logger.debug('Label of y[{num}] : {y}'.format(
             num=self.num,
             y=self.y[self.num])
@@ -124,8 +125,8 @@ class Test():
         which mean:
 
                       guess not 5 | guess 5
-        really not 5       A      |   B
-        really is  5       C      |   D
+        really not 5       TN      |   FP
+        really is  5       FN      |   TP
         """
         y_train_pred = cross_val_predict(
             self.sgd_clf,
@@ -224,7 +225,7 @@ class Test():
 
         y_train_pred_90 = (self.y_scores > thresholds_90_pred)
         logger.debug(
-            'precision score of threshold =={threshold} {precision}'
+            'precision score when threshold =={threshold} {precision}'
             .format(
                 threshold=thresholds_90_pred,
                 precision=precision_score(self.y_train_5, y_train_pred_90),
@@ -232,7 +233,7 @@ class Test():
         )
 
         logger.debug(
-            'recall score of threshold == {threshold} {recall}'
+            'recall score when threshold == {threshold} {recall}'
             .format(
                 threshold=thresholds_90_pred,
                 recall=recall_score(self.y_train_5, y_train_pred_90),
@@ -251,7 +252,7 @@ class Test():
         #  https://zh.wikipedia.org/wiki/ROC曲线
         ###
 
-        logger.info('Plot ROC Curve')
+        logger.info('Plot SGD ROC Curve')
         fpr, tpr, thresholds = roc_curve(self.y_train_5, self.y_scores)
 
         plt.plot(fpr, tpr, linewidth=2, label=None)
@@ -264,8 +265,59 @@ class Test():
         subprocess.call(['catimg', '-f', 'img/roc.png'])
         roc_auc = roc_auc_score(self.y_train_5, self.y_scores)
         logger.debug(
-            'ROC AUC Score : {score}'
+            'SGD ROC AUC Score : {score}'
             .format(score=roc_auc)
+        )
+
+    @property
+    def randforestclassifier_and_roc_curve(self):
+        """Plot RandForestClassifier ROC Curve & ROC AUC."""
+        ###
+        #  sklearn.ensemble.Randomforestclassifier
+        ###
+        logger.info('RandomForestClassifier ROC Curve')
+        forest_clf = RandomForestClassifier(random_state=42)
+        y_probas_forest = cross_val_predict(
+            forest_clf,
+            self.x_train,
+            self.y_train_5,
+            cv=3,
+            method='predict_proba',
+        )
+        # score = proba of positive class
+        y_score_forest = y_probas_forest[:, 1]
+
+        fpr, tpr, thresholds = roc_curve(self.y_train_5, self.y_scores)
+        fpr_forest, tpr_forest, thresholds_forest = roc_curve(
+            self.y_train_5,
+            y_score_forest,
+        )
+
+        # plt
+        plt.plot(fpr, tpr, 'b:', label="SGD")
+        plt.plot(fpr_forest, tpr_forest, linewidth=2, label="Random Forest")
+        plt.plot([0, 1], [0, 1], 'k--')
+        plt.axis([0, 1, 0, 1])
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.legend(loc='lower right')
+        plt.savefig('img/randomforestclassifier_roc')
+        plt.clf()
+        subprocess.call(['catimg', '-f', 'img/randomforestclassifier_roc.png'])
+
+        # ROC AUC
+        roc_auc = roc_auc_score(self.y_train_5, self.y_scores)
+        randomforestclassifier_roc_auc = roc_auc_score(
+            self.y_train_5,
+            y_score_forest,
+        )
+        logger.debug(
+            '\nRandomForestClassifier ROC AUC Score : {rfc_score}'
+            '\nSGD ROC AUC Score {score}'
+            .format(
+                rfc_score=randomforestclassifier_roc_auc,
+                score=roc_auc,
+            )
         )
 
 
@@ -287,9 +339,10 @@ class Never5Classifier(BaseEstimator):
 
 if __name__ == '__main__':
     t = Test()
-    t.p1
+    t.guess
     t.sgd
     t.never5
     t.confusion_matrix
     t.plot_precsion_recall_vs_threshold_curve
     t.plot_roc_curve
+    t.randforestclassifier_and_roc_curve
