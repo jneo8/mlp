@@ -9,6 +9,7 @@ from sklearn.model_selection import cross_val_score
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import cross_val_predict
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.multiclass import OneVsOneClassifier
 
 from sklearn.metrics import (
     confusion_matrix,
@@ -24,8 +25,8 @@ from confs import logconf
 logger = logconf.Logger(__file__).logger
 
 
-class Test():
-    """Tset class."""
+class BinaryClassifier():
+    """BinaryClassifier class."""
 
     def __init__(self):
         """Init."""
@@ -49,10 +50,23 @@ class Test():
         self.some_digit = self.x[self.num]
 
     @property
+    def main(self):
+        """Step by step record."""
+        self.guess
+        self.sgd
+        self.never5
+        self.confusion_matrix
+        self.plot_precsion_recall_vs_threshold_curve
+        self.plot_roc_curve
+        self.randforestclassifier_and_roc_curve
+        self.multiclass_classification
+        self.one_vs_one_classifier
+
+    @property
     def guess(self):
         """p1."""
         """
-        "" Only show one png.
+        Only show one png.
         """
         logger.info('Use SGDClassifier to guess img')
         # reshape data
@@ -75,17 +89,19 @@ class Test():
     @property
     def sgd(self):
         """SGD model."""
+        """
         # set train num, so that model can guess that is the digit is that num?
-
-        # sklearn.linear_model.SGDClassifier
+            sklearn.linear_model.SGDClassifier
+        """
         self.sgd_clf = SGDClassifier(random_state=42)
         self.sgd_clf.fit(self.x_train, self.y_train_5)
         logger.debug('SDG model 5 guess : {}'.format(
             self.sgd_clf.predict([self.some_digit]))
         )
-
-        # Measuring Accuracy using cross-validation
-        # 測量精度
+        """
+        Measuring Accuracy using cross-validation
+        測量精度
+        """
         x = cross_val_score(
             self.sgd_clf,
             self.x_train,
@@ -139,32 +155,34 @@ class Test():
             commit=commit, x=x
         ))
 
-        ###
-        # precision = TP / (TP + FP)
-        # which mean TP / (All the items we detect)
-        ###
-        # sklearn.metrics.precision_score
+        """
+        precision = TP / (TP + FP)
+        which mean TP / (All the items we detect)
+
+        sklearn.metrics.precision_score
+        """
+
         presicion = precision_score(self.y_train_5, y_train_pred)
         logger.debug('precision {}'.format(presicion))
 
-        ###
-        # recall/sensitivity/true positive rate = TP / (TP + FN)
-        # which mean TP / (the items should be detect.)
-        ###
-        # sklearn.metrics.recall_score
+        """
+        recall/sensitivity/true positive rate = TP / (TP + FN)
+        which mean TP / (the items should be detect.)
+        sklearn.metrics.recall_score
+        """
         recall = recall_score(self.y_train_5, y_train_pred)
         logger.debug('recall {}'.format(recall))
 
-        ###
-        # F1-Score = TP / (TP + ((FN + FP) / 2))
-        ###
+        """
+        F1-Score = TP / (TP + ((FN + FP) / 2))
+        """
         # sklearn.metrics.f1_score
         f1_score_ = f1_score(self.y_train_5, y_train_pred)
         logger.debug('f1 score {}'.format(f1_score_))
 
-        ###
-        # Get some_digit's score, and reset threshold.
-        ###
+        """
+        Get some_digit's score, and reset threshold.
+        """
         y_score = self.sgd_clf.decision_function([self.some_digit])
         threshold = 20000
         y_some_digit_pred = (y_score > threshold)
@@ -183,10 +201,10 @@ class Test():
     @property
     def plot_precsion_recall_vs_threshold_curve(self):
         """Draw curve of presicion, recall and threshold."""
-        ###
+        """
         # Get classifer of 90% precision.
-        # sklearn.metrics.precision_recall_curve
-        ###
+            sklearn.metrics.precision_recall_curve
+        """
 
         self.y_scores = cross_val_predict(
             self.sgd_clf,
@@ -243,14 +261,14 @@ class Test():
     @property
     def plot_roc_curve(self):
         """Plot Roc curve."""
-        ###
-        #  plot roc curve.
-        #  sklearn.metrics.roc_curve
-        #  compute ROC AUC
-        #  sklearn.metrics.roc_auc_score
-        #  Roc curve
-        #  https://zh.wikipedia.org/wiki/ROC曲线
-        ###
+        """
+        # plot roc curve.
+            sklearn.metrics.roc_curve
+        # compute ROC AUC
+            sklearn.metrics.roc_auc_score
+        # Roc curve
+            https://zh.wikipedia.org/wiki/ROC曲线
+        """
 
         logger.info('Plot SGD ROC Curve')
         fpr, tpr, thresholds = roc_curve(self.y_train_5, self.y_scores)
@@ -272,9 +290,9 @@ class Test():
     @property
     def randforestclassifier_and_roc_curve(self):
         """Plot RandForestClassifier ROC Curve & ROC AUC."""
-        ###
+        """
         #  sklearn.ensemble.Randomforestclassifier
-        ###
+        """
         logger.info('RandomForestClassifier ROC Curve')
         forest_clf = RandomForestClassifier(random_state=42)
         y_probas_forest = cross_val_predict(
@@ -320,6 +338,46 @@ class Test():
             )
         )
 
+    @property
+    def multiclass_classification(self):
+        """Multiclass Classification."""
+        logger.info('Multiclass Classification')
+
+        """
+        This code trains the SGDClassifier on the trainiing set using the
+        origin target classes from 0 to 9 (y_train), instead of the
+        5-versus-all target classes.
+        Scikit-Learn actually train 10 binary classifiers, got their decision
+        scores for the img, and selected the class with the highest score.
+        """
+        self.sgd_clf.fit(self.x_train, self.y_train)  # y_train, not y_train_5
+        logger.debug(self.sgd_clf.predict([self.some_digit]))
+
+        """
+        decision_function method return list of scores from all classifier.
+        """
+        some_digit_scores = self.sgd_clf.decision_function([self.some_digit])
+        logger.debug('some_digit_scores {}'.format(some_digit_scores))
+
+        logger.debug('highest score {}'.format(np.argmax(some_digit_scores)))
+        logger.debug('sgd_clf.classes_ {}'.format(self.sgd_clf.classes_))
+        logger.debug('sgd_clf.classes_[6] {}'.format(self.sgd_clf.classes_[6]))
+
+    @property
+    def one_vs_one_classifier(self):
+        """User OneVsOneClassifier."""
+        """
+        sklearn.multiclass.OneVsOneClassifier
+        """
+        logger.info('User OneVsOneClassifier')
+        ovo_clf = OneVsOneClassifier(SGDClassifier(random_state=42))
+        ovo_clf.fit(self.x_train, self.y_train)
+        logger.debug(
+            'Predict some_digiit {}'
+            .format(ovo_clf.predict([self.some_digit]))
+        )
+        logger.debug('len ovo_clf : {}'.format(len(ovo_clf.estimators_)))
+
 
 class Never5Classifier(BaseEstimator):
     """Never5Classifier."""
@@ -338,11 +396,9 @@ class Never5Classifier(BaseEstimator):
 
 
 if __name__ == '__main__':
-    t = Test()
-    t.guess
-    t.sgd
-    t.never5
-    t.confusion_matrix
-    t.plot_precsion_recall_vs_threshold_curve
-    t.plot_roc_curve
-    t.randforestclassifier_and_roc_curve
+    t = BinaryClassifier()
+    t.main
+
+
+
+
