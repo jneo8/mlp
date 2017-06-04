@@ -27,6 +27,23 @@ from confs import logconf
 logger = logconf.Logger(__file__).logger
 
 
+def plot_digits(instances, images_per_row=10, **options):
+    """EXTRA."""
+    size = 28
+    images_per_row = min(len(instances), images_per_row)
+    images = [instance.reshape(size, size) for instance in instances]
+    n_rows = (len(instances) - 1) // images_per_row + 1
+    row_images = []
+    n_empty = n_rows * images_per_row - len(instances)
+    images.append(np.zeros((size, size * n_empty)))
+    for row in range(n_rows):
+        rimages = images[row * images_per_row: (row + 1) * images_per_row]
+        row_images.append(np.concatenate(rimages, axis=1))
+    image = np.concatenate(row_images, axis=0)
+    plt.imshow(image, cmap=matplotlib.cm.binary, **options)
+    plt.axis("off")
+
+
 class BinaryClassifier():
     """BinaryClassifier class."""
 
@@ -427,6 +444,7 @@ class BinaryClassifier():
     @property
     def error_analysis(self):
         """Error Analysis."""
+        logger.info('Error Analysis')
         scaler = StandardScaler()
         x_train_scaled = scaler.fit_transform(self.x_train.astype(np.float64))
         y_train_pred = cross_val_predict(
@@ -437,10 +455,46 @@ class BinaryClassifier():
         )
         conf_mx = confusion_matrix(self.y_train, y_train_pred)
         logger.debug(conf_mx)
-        # plt 
+        logger.debug('Each rows represent actual classes, while columns represent predicted classes.')
+        # plt
         plt.matshow(conf_mx, cmap=plt.cm.gray)
         plt.savefig('error_analysis_matrix')
+        plt.clf()
         subprocess.call(['catimg', '-f', 'error_analysis_matrix.png'])
+        """
+        divide each value in the confusion matrix by the number of the image
+        in the corresponding class, so you can compare error rates instead of
+        absolute number of errors.
+        """
+        row_sums = conf_mx.sum(axis=1, keepdims=True)
+        norm_conf_mx = conf_mx / row_sums
+        # https://docs.scipy.org/doc/numpy/reference/generated/numpy.fill_diagonal.html
+        np.fill_diagonal(norm_conf_mx, 0)
+        # plt
+        plt.matshow(norm_conf_mx, cmap=plt.cm.gray)
+        plt.savefig('norm_conf_mx')
+        plt.clf()
+        subprocess.call(['catimg', '-f', 'norm_conf_mx.png'])
+
+        # plot example of 3s & 5s
+        logger.debug('plot example of 3s & 5s')
+        cl_a, cl_b = 3, 5
+        x_aa = self.x_train[(self.y_train == cl_a) & (y_train_pred == cl_a)]
+        x_ab = self.x_train[(self.y_train == cl_a) & (y_train_pred == cl_b)]
+        x_ba = self.x_train[(self.y_train == cl_b) & (y_train_pred == cl_a)]
+        x_bb = self.x_train[(self.y_train == cl_b) & (y_train_pred == cl_b)]
+        plt.figure(figsize=(8, 8))
+        plt.subplot(221)
+        plot_digits(x_aa[:25], images_per_row=5)
+        plt.subplot(222)
+        plot_digits(x_ab[:25], images_per_row=5)
+        plt.subplot(223)
+        plot_digits(x_ba[:25], images_per_row=5)
+        plt.subplot(224)
+        plot_digits(x_bb[:25], images_per_row=5)
+        plt.savefig('plot_example_3s&5s')
+        plt.clf()
+        subprocess.call(['catimg', '-f', 'plot_example_3s&5s.png'])
 
 
 class Never5Classifier(BaseEstimator):
