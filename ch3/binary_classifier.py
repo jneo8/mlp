@@ -56,13 +56,14 @@ class BinaryClassifier():
         """Step by step record."""
         self.guess
         self.sgd
-        self.never5
-        self.confusion_matrix
-        self.plot_precsion_recall_vs_threshold_curve
-        self.plot_roc_curve
-        self.randforestclassifier_and_roc_curve
-        self.multiclass_classification
-        self.one_vs_one_classifier
+        # self.never5
+        # self.confusion_matrix
+        # self.plot_precsion_recall_vs_threshold_curve
+        # self.plot_roc_curve
+        # self.randforestclassifier_and_roc_curve
+        # self.multiclass_classification
+        # self.one_vs_one_classifier
+        self.error_analysis
 
     @property
     def guess(self):
@@ -422,6 +423,24 @@ class BinaryClassifier():
         )
 
         logger.debug('ovo_scaled_scores {}'.format(ovo_scaled_scores))
+
+    @property
+    def error_analysis(self):
+        """Error Analysis."""
+        scaler = StandardScaler()
+        x_train_scaled = scaler.fit_transform(self.x_train.astype(np.float64))
+        y_train_pred = cross_val_predict(
+            self.sgd_clf,
+            x_train_scaled,
+            self.y_train,
+            cv=3
+        )
+        conf_mx = confusion_matrix(self.y_train, y_train_pred)
+        logger.debug(conf_mx)
+        # plt 
+        plt.matshow(conf_mx, cmap=plt.cm.gray)
+        plt.savefig('error_analysis_matrix')
+        subprocess.call(['catimg', '-f', 'error_analysis_matrix.png'])
 
 
 class Never5Classifier(BaseEstimator):
