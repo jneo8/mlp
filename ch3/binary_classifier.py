@@ -46,6 +46,26 @@ def plot_digits(instances, images_per_row=10, **options):
     plt.axis("off")
 
 
+def plot_digit(digit, num, y):
+    """plot_digit."""
+    # reshape data
+    some_digit_image = digit.reshape(28, 28)
+    # put digit_image data into plt, and use catimg show in termial.
+    plt.imshow(
+        some_digit_image,
+        cmap=matplotlib.cm.binary,
+        interpolation="nearest",
+    )
+    plt.axis('off')
+    plt.savefig('img/digit{}'.format(num))
+    plt.clf()
+    subprocess.call(['catimg', '-f', 'img/digit{}.png'.format(num)])
+    logger.debug('Label of y[{num}] : {y}'.format(
+        num=num,
+        y=y[num])
+    )
+
+
 class BinaryClassifier():
     """BinaryClassifier class."""
 
@@ -84,6 +104,7 @@ class BinaryClassifier():
         self.one_vs_one_classifier
         self.error_analysis
         self.multilabel_classification
+        self.multiouput_classification
 
     @property
     def guess(self):
@@ -506,12 +527,13 @@ class BinaryClassifier():
 
     @property
     def multilabel_classification(self):
-        """mulitilabel_classification."""
-        """
-        sklearn.neighbors.KNeighborsClassifier
+        """Mulitilabel Classification.
+
+        Sklearn.neighbors.KNeighborsClassifier
         Create y_multilabel array containing two target labels
         for each digit img.
         """
+        logger.info('multilabel_classificationab')
         y_train_large = (self.y_train >= 7)
         y_train_odd = (self.y_train % 2 == 1)
         y_multilabel = np.c_[y_train_large, y_train_odd]
@@ -525,6 +547,40 @@ class BinaryClassifier():
                 value=knn_clf.predict([self.some_digit])
             )
         )
+
+        # f1_score
+        # y_train_knn_pred = cross_val_predict(
+        #     knn_clf,
+        #     self.x_train,
+        #     self.y_train,
+        #     cv=3,
+        # )
+        # logger.debug(
+        #     'Average f1 score across all labels {}'
+        #     .format(
+        #         f1_score(self.y_train, y_train_knn_pred, average="macro")
+        #     )
+        # )
+
+    @property
+    def multiouput_classification(self):
+        """MultiouputClassification."""
+        logger.info('multiouput_classification')
+        x_train_mod = (
+            self.x_train + np.random.randint(0, 100, (len(self.x_train), 784))
+        )
+        x_test_mod = (
+            self.x_test + np.random.randint(0, 100, (len(self.x_test), 784))
+        )
+        y_train_mod = self.x_train
+        # y_test_mod = self.x_test
+        num = 900
+        plot_digit(digit=self.x_test[num], num=num, y=self.y)
+        plot_digit(digit=x_test_mod[num], num=num, y=self.y)
+        knn_clf = KNeighborsClassifier()
+        knn_clf.fit(x_train_mod, y_train_mod)
+        clean_digit = knn_clf.predict([x_test_mod[num]])
+        plot_digit(digit=clean_digit, num=num, y=self.y)
 
 
 class Never5Classifier(BaseEstimator):
