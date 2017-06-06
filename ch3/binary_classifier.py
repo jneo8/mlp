@@ -1,5 +1,6 @@
 """Test."""
 import subprocess
+import time
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -9,6 +10,7 @@ from sklearn.base import BaseEstimator
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.multiclass import OneVsOneClassifier
 from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import (
     cross_val_score,
     cross_val_predict,
@@ -73,14 +75,15 @@ class BinaryClassifier():
         """Step by step record."""
         self.guess
         self.sgd
-        # self.never5
-        # self.confusion_matrix
-        # self.plot_precsion_recall_vs_threshold_curve
-        # self.plot_roc_curve
-        # self.randforestclassifier_and_roc_curve
-        # self.multiclass_classification
-        # self.one_vs_one_classifier
+        self.never5
+        self.confusion_matrix
+        self.plot_precsion_recall_vs_threshold_curve
+        self.plot_roc_curve
+        self.randforestclassifier_and_roc_curve
+        self.multiclass_classification
+        self.one_vs_one_classifier
         self.error_analysis
+        self.multilabel_classification
 
     @property
     def guess(self):
@@ -455,7 +458,12 @@ class BinaryClassifier():
         )
         conf_mx = confusion_matrix(self.y_train, y_train_pred)
         logger.debug(conf_mx)
-        logger.debug('Each rows represent actual classes, while columns represent predicted classes.')
+        logger.debug(
+            '''
+            Each rows represent actual classes,
+            while columns represent predicted classes.
+            '''
+        )
         # plt
         plt.matshow(conf_mx, cmap=plt.cm.gray)
         plt.savefig('error_analysis_matrix')
@@ -496,6 +504,28 @@ class BinaryClassifier():
         plt.clf()
         subprocess.call(['catimg', '-f', 'plot_example_3s&5s.png'])
 
+    @property
+    def multilabel_classification(self):
+        """mulitilabel_classification."""
+        """
+        sklearn.neighbors.KNeighborsClassifier
+        Create y_multilabel array containing two target labels
+        for each digit img.
+        """
+        y_train_large = (self.y_train >= 7)
+        y_train_odd = (self.y_train % 2 == 1)
+        y_multilabel = np.c_[y_train_large, y_train_odd]
+
+        knn_clf = KNeighborsClassifier()
+        knn_clf.fit(self.x_train, y_multilabel)
+
+        logger.debug(
+            'Knn predict {value}'
+            .format(
+                value=knn_clf.predict([self.some_digit])
+            )
+        )
+
 
 class Never5Classifier(BaseEstimator):
     """Never5Classifier."""
@@ -514,9 +544,11 @@ class Never5Classifier(BaseEstimator):
 
 
 if __name__ == '__main__':
+    starttime = time.time()
     t = BinaryClassifier()
     t.main
-
+    endtime = time.time()
+    logger.info('total time {}'.format(endtime - starttime))
 
 
 
