@@ -25,7 +25,6 @@ def normal_equation():
 
     plt.scatter(x, y)
     save_img_and_show(name='p1')
-    # test
 
 if __name__ == '__main__':
     normal_equation()
