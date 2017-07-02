@@ -1,4 +1,4 @@
-"""Gradient Descent."""
+"""Gradient Descent & Batch Gradient Descent."""
 
 import numpy as np
 import numpy.random as rnd
