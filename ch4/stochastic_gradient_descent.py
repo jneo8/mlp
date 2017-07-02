@@ -3,7 +3,7 @@
 import numpy as np
 import numpy.random as rnd
 import matplotlib.pyplot as plt
-
+from sklearn.linear_model import SGDRegressor
 from base import save_img_and_show, x, x_b, y, x_new, x_new_b
 from confs import logconf
 
@@ -45,5 +45,14 @@ def sgd_simple_learning_schedule():
     save_img_and_show(name="sgd_plot")
 
 
+def sgd_skl():
+    """SGD with skl."""
+    sgd_reg = SGDRegressor(n_iter=50, penalty=None, eta0=0.1)
+    sgd_reg.fit(x, y.ravel())
+    logger.debug('sgd_reg.intercept_ {}'.format(sgd_reg.intercept_))
+    logger.debug('sgd_reg.coef_ {}'.format(sgd_reg.coef_))
+
+
 if __name__ == '__main__':
     sgd_simple_learning_schedule()
+    sgd_skl()
