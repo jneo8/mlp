@@ -12,6 +12,7 @@ logger = logconf.Logger(__file__).logger
 
 
 def sgd_simple_learning_schedule():
+    """SGD use simple_learning_schedule."""
     n_epochs = 50
     t0, t1 = 5, 50  # learning schedule hyperparameters
 
@@ -35,6 +36,8 @@ def sgd_simple_learning_schedule():
             eta = learning_schedule(epoch * m + i)
             theta = theta - eta * gradients
 
+    logger.info('theta :{}'.format(theta))
+
     plt.plot(x, y, "b.")
     plt.xlabel("$x_1$", fontsize=18)
     plt.ylabel("$y$", rotation=0, fontsize=18)
@@ -44,4 +47,3 @@ def sgd_simple_learning_schedule():
 
 if __name__ == '__main__':
     sgd_simple_learning_schedule()
-
