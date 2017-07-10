@@ -2,6 +2,8 @@
 import numpy as np
 from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 import matplotlib.pyplot as plt
 
@@ -43,5 +45,32 @@ def high_degree_polynomial_regression():
     plt.axis([-3, 3, 0, 10])
     save_img_and_show(name='high_degree_polynomials_plot')
 
+
+def plot_learning_curves(model, x, y):
+    """Learning Curves."""
+    x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.2)
+    train_errors, val_errors = [], []
+    for m in range(1, len(x_train)):
+        model.fit(x_train[:m], y_train[:m])
+        y_train_predict = model.predict(x_train[:m])
+        y_val_predict = model.predict(x_val)
+        train_errors.append(mean_squared_error(y_train_predict, y_train[:m]))
+        val_errors.append(mean_squared_error(y_val_predict, y_val))
+    plt.plot(np.sqrt(train_errors), "r-+", linewidth=2, label="train")
+    plt.plot(np.sqrt(val_errors), "b-", linewidth=3, label="val")
+    plt.legend(loc="upper right", fontsize=14)
+    plt.xlabel("Training set size", fontsize=14)
+    plt.ylabel("RMSE", fontsize=14)
+
+
+def learning_curves():
+    lin_reg = LinearRegression()
+    plot_learning_curves(lin_reg, x, y)
+    plt.axis([0, 80, 0, 3])
+    save_img_and_show(name='learning_curves')
+        
+
+
 if __name__ == '__main__':
     high_degree_polynomial_regression()
+    learning_curves()
