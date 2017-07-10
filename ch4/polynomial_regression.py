@@ -1,6 +1,5 @@
 """Polynomial Regression."""
 import numpy as np
-import numpy.random as rnd
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
@@ -14,7 +13,7 @@ logger = logconf.Logger(__file__).logger
 def main():
 
     m = 100
-    x = 6 * np.random.rand(m, 1) -3
+    x = 6 * np.random.rand(m, 1) - 3
     y = 0.5 * x**2 + x + 2 + np.random.randn(m, 1)
     plt.plot(x, y, 'b.')
     plt.xlabel('$x_1$', fontsize=18)
@@ -22,6 +21,7 @@ def main():
     plt.axis([-1, 3, 0, 10])
     save_img_and_show(name='Genearated nonlinear & noisy dataset')
 
+    # Use skl
     poly_features = PolynomialFeatures(degree=2, include_bias=False)
     x_poly = poly_features.fit_transform(x)
     logger.info('x[0] {}'.format(x[0]))
