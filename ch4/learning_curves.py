@@ -68,9 +68,19 @@ def learning_curves():
     plot_learning_curves(lin_reg, x, y)
     plt.axis([0, 80, 0, 3])
     save_img_and_show(name='learning_curves')
-        
+
+
+def polynomial_10degree():
+    polynomial_regression = Pipeline((
+        ('poly_features', PolynomialFeatures(degree=10, include_bias=False)),
+        ('sgd_reg', LinearRegression()),
+    ))
+    plot_learning_curves(polynomial_regression, x, y)
+    plt.axis([0, 80, 0, 3])
+    save_img_and_show('learning_curves_plot')
 
 
 if __name__ == '__main__':
     high_degree_polynomial_regression()
     learning_curves()
+    polynomial_10degree()
