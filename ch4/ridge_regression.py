@@ -3,11 +3,9 @@ import numpy as np
 import numpy.random as rnd
 import matplotlib.pyplot as plt
 
+from sklearn.linear_model import Ridge, LinearRegression, SGDRegressor
 from sklearn.preprocessing import PolynomialFeatures, StandardScaler
-from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.pipeline import Pipeline
-from sklearn.linear_model import SGDRegressor
-
 from base import save_img_and_show
 from confs import logconf
 
@@ -81,8 +79,6 @@ def ridge_regression_with_skl():
         'sgd  predict 1.5 : {}'
         .format(sgd_reg.predict([[1.5]]))
     )
-
-
 
 if __name__ == '__main__':
     ridge_regression()
