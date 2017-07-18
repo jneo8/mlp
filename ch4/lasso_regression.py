@@ -61,6 +61,7 @@ def main():
     plot_model(Lasso, polynomial=False, alphas=(0, 0.1, 1))
     plt.ylabel("$y$", rotation=0, fontsize=18)
     plt.subplot(122)
+    # Show different alpha of lasso regression
     plot_model(Lasso, polynomial=True, alphas=(0, 10**-7, 1), tol=1)
 
     save_img_and_show(name="lasso_regression_plot")
