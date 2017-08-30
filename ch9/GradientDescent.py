@@ -41,7 +41,18 @@ def main():
     y_pred = tf.matmul(x, theta, name='predictions')
     error = y_pred - y
     mse = tf.reduce_mean(tf.square(error), name='mse')
-    gradients = 2 / m * tf.matmul(tf.transpose(x), error)
+
+    #################################################
+    # Using autodiff
+    # tf's autodiff feature comes to the rescue:
+    # It can automatically and efficiently compute the gradient for you.
+    #################################################
+
+    # old code, compute gradient by own.
+    # gradients = 2 / m * tf.matmul(tf.transpose(x), error)
+
+    # using autodiff
+    # gradients = tf.gradients(mse, [theta])[0]
 
     #################################################
     # assign() function
@@ -49,7 +60,21 @@ def main():
     # In this case, it implements the Batch Gradient Descent
     # theta(next step) = theta - gradients
     #################################################
-    training_op = tf.assign(theta, theta - learning_rate * gradients)
+    # training_op = tf.assign(theta, theta - learning_rate * gradients)
+
+    #################################################
+    # Using an Optimizer.
+    #################################################
+
+    # use GradientDescentOptimizer
+    # optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate)
+
+    # use momentum optimizer
+    optimizer = tf.train.MomentumOptimizer(
+        learning_rate=learning_rate, momentum=0.9
+    )
+    training_op = optimizer.minimize(mse)
+
     init = tf.global_variables_initializer()
 
     # tf session
@@ -63,7 +88,7 @@ def main():
                 logger.info(f'Epoch {epoch}, MSE = {mse.eval()}')  # noqa
                 logger.debug(f'theta \n{theta.eval()}')
                 logger.debug(f'error \n{error.eval()}')
-                logger.debug(f'gradients \n{gradients.eval()}')
+                # logger.debug(f'gradients \n{gradients.eval()}')
             sess.run(training_op)
 
         best_theta = theta.eval()

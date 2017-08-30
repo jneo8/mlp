@@ -293,6 +293,47 @@ if __name__ == '__main__':
     main()
 ```
 
+---
+
+# Using autodiff
+
+The preceding code work fine, but it requires mathematically deriving the gradients from the cost function(MSE).
+In the case of Linear Regression, it is reasonably easy, but if you had to do this with deep neural networks you would get quite a headache.
+It will be tedious and error-prone.
+You could use `symbolic differentiation` to automatically find the equations for partial derivatives for you, but the resulting code would not necessarily be very efficient.
+
+You can use tf's autodiff feature, it can automatically and efficiently compute the gradient for you.(In this case is mse)
+
+```python
+gradients = tf.gradients(mse, [theta])[0]
+```
+
+---
+
+# Using an Optimizer
+
+So tf computes the Gradient for you. But it get even easier: is also provides a number of optimizers out of the box.
+
+[tf.train.GradientDescentOptimizer](https://www.tensorflow.org/versions/r1.0/api_docs/python/tf/train/GradientDescentOptimizer)
+
+```python
+optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate)
+training_op = optimizer.minimize(mse)
+```
+
+
+or use different type of optimizer
+For example, you can use a `momentum optimizer`
+which often converges much faster than Gradient Descent.
+ 
+```python
+optimizer = tf.train.MomentumOptimizer(
+    learning_rate=learning_rate,
+    momentum=0.9,
+)
+```
+
+
 
 
 
